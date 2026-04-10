@@ -1,0 +1,66 @@
+name: Hostinger Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/hostinger-deploy.yml"
+      - "docker-compose.hostinger.yml"
+      - "Dockerfile"
+      - "requirements.txt"
+      - "api/**"
+      - "assets/**"
+      - "config/**"
+      - "scripts/**"
+      - "static/**"
+      - "templates/**"
+      - "webapp/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Check Hostinger deployment configuration
+        id: preflight
+        shell: bash
+        env:
+          HOSTINGER_API_KEY: ${{ secrets.HOSTINGER_API_KEY }}
+          HOSTINGER_VM_ID: ${{ vars.HOSTINGER_VM_ID }}
+        run: |
+          if [ -z "$HOSTINGER_API_KEY" ] || [ -z "$HOSTINGER_VM_ID" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Hostinger deployment skipped because HOSTINGER_API_KEY or HOSTINGER_VM_ID is missing."
+            exit 0
+          fi
+
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Hostinger VPS
+        if: steps.preflight.outputs.configured == 'true'
+        uses: hostinger/deploy-action@v1
+        with:
+          api-key: ${{ secrets.HOSTINGER_API_KEY }}
+          virtual-machine: ${{ vars.HOSTINGER_VM_ID }}
+          project-name: jose-wipes-studio
+          docker-compose-path: docker-compose.hostinger.yml
+          environment-variables: |
+            TRAEFIK_HOST=${{ vars.TRAEFIK_HOST }}
+            TRAEFIK_BASIC_AUTH_USERS=${{ secrets.TRAEFIK_BASIC_AUTH_USERS }}
+            HF_API_KEY=${{ secrets.HF_API_KEY }}
+            HF_API_SECRET=${{ secrets.HF_API_SECRET }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            OPENAI_PLANNER_MODEL=${{ vars.OPENAI_PLANNER_MODEL }}
+            ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}
+            GOOGLE_SERVICE_ACCOUNT_FILE=${{ vars.GOOGLE_SERVICE_ACCOUNT_FILE }}
+            GOOGLE_DRIVE_FOLDER_ID=${{ vars.GOOGLE_DRIVE_FOLDER_ID }}
+            GOOGLE_SERVICE_ACCOUNT_HOST_PATH=${{ vars.GOOGLE_SERVICE_ACCOUNT_HOST_PATH }}
+            TZ=${{ vars.TZ }}
+            PYTHONUNBUFFERED=${{ vars.PYTHONUNBUFFERED }}

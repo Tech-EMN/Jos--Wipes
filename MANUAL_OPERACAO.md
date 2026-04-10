@@ -129,6 +129,14 @@ O sistema já sabe pelo brandbook:
 python scripts/health_check.py
 ```
 
+## Deploy em produção na Hostinger
+
+Para subir a interface web com Docker Manager, Traefik, HTTPS, BasicAuth e volumes persistentes na Hostinger, use:
+
+- `HOSTINGER_DEPLOY.md`
+- `docker-compose.hostinger.yml`
+- `.env.hostinger.example`
+
 ## Contato suporte
 
 ATRIA Corp — equipe responsável pelo pipeline.
